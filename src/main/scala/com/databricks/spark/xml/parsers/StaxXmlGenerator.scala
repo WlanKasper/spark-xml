@@ -42,8 +42,8 @@ private[xml] object StaxXmlGenerator {
       writer: XMLStreamWriter,
       options: XmlOptions)(row: Row): Unit = {
 
-    require(options.attributePrefix.nonEmpty,
-      "'attributePrefix' option should not be empty string.")
+//    require(options.attributePrefix.nonEmpty,
+//      "'attributePrefix' option should not be empty string.")
 
     def writeChildElement(name: String, dt: DataType, v: Any): Unit = (name, dt, v) match {
       // If this is meant to be value but in no child, write only a value
@@ -63,11 +63,13 @@ private[xml] object StaxXmlGenerator {
       (dt, v) match {
         // If this is meant to be attribute, write an attribute
         case (_, null) | (NullType, _)
-          if name.startsWith(options.attributePrefix) && name != options.valueTag =>
+          if options.attributePrefix.nonEmpty &&
+             name.startsWith(options.attributePrefix) && name != options.valueTag =>
           Option(options.nullValue).foreach {
             writer.writeAttribute(name.substring(options.attributePrefix.length), _)
           }
-        case _ if name.startsWith(options.attributePrefix) && name != options.valueTag =>
+        case _ if options.attributePrefix.nonEmpty &&
+                  name.startsWith(options.attributePrefix) && name != options.valueTag =>
           writer.writeAttribute(name.substring(options.attributePrefix.length), v.toString)
 
         // For ArrayType, we just need to write each as XML element.
@@ -114,7 +116,8 @@ private[xml] object StaxXmlGenerator {
 
       case (MapType(_, vt, _), mv: Map[_, _]) =>
         val (attributes, elements) = mv.toSeq.partition { case (f, _) =>
-          f.toString.startsWith(options.attributePrefix) && f.toString != options.valueTag
+          options.attributePrefix.nonEmpty &&
+            f.toString.startsWith(options.attributePrefix) && f.toString != options.valueTag
         }
         // We need to write attributes first before the value.
         (attributes ++ elements).foreach {
@@ -124,7 +127,8 @@ private[xml] object StaxXmlGenerator {
 
       case (StructType(ty), r: Row) =>
         val (attributes, elements) = ty.zip(r.toSeq).partition { case (f, _) =>
-          f.name.startsWith(options.attributePrefix) && f.name != options.valueTag
+          options.attributePrefix.nonEmpty &&
+            f.name.startsWith(options.attributePrefix) && f.name != options.valueTag
         }
         // We need to write attributes first before the value.
         (attributes ++ elements).foreach {
@@ -138,7 +142,8 @@ private[xml] object StaxXmlGenerator {
     }
 
     val (attributes, elements) = schema.zip(row.toSeq).partition { case (f, _) =>
-      f.name.startsWith(options.attributePrefix) && f.name != options.valueTag
+      options.attributePrefix.nonEmpty &&
+        f.name.startsWith(options.attributePrefix) && f.name != options.valueTag
     }
     // Writing attributes
     writer.writeStartElement(options.rowTag)

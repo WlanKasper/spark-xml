@@ -2,17 +2,17 @@ import com.typesafe.tools.mima.core.MissingClassProblem
 
 name := "spark-xml"
 
-version := "0.18.0"
+version := "0.18.1"
 
 organization := "com.databricks"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.12.15"
 
 crossScalaVersions := Seq("2.12.15", "2.13.8")
 
 scalacOptions := Seq("-unchecked", "-deprecation")
 
-val sparkVersion = sys.props.get("spark.testVersion").getOrElse("3.5.1")
+val sparkVersion = "3.5.1"
 
 // To avoid packaging it, it's Provided below
 autoScalaLibrary := false

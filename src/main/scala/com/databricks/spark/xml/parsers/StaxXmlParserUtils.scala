@@ -92,7 +92,7 @@ private[xml] object StaxXmlParserUtils {
   def convertAttributesToValuesMap(
       attributes: Array[Attribute],
       options: XmlOptions): Map[String, String] = {
-    if (options.excludeAttributeFlag) {
+    if (options.excludeAttributeFlag || options.attributePrefix.isEmpty) {
       Map.empty[String, String]
     } else {
       attributes.map { attr =>

@@ -158,7 +158,8 @@ private[xml] object StaxXmlParser extends Serializable {
         // value tag field. Or, it can be a mixed-type element with both some character elements
         // and other complex structure. Character elements are ignored.
         val attributesOnly = st.fields.forall { f =>
-          f.name == options.valueTag || f.name.startsWith(options.attributePrefix)
+          f.name == options.valueTag ||
+            (options.attributePrefix.nonEmpty && f.name.startsWith(options.attributePrefix))
         }
         if (attributesOnly) {
           // If everything else is an attribute column, there's no complex structure.

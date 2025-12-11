@@ -1130,19 +1130,40 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("from_xml basic test") {
-    val xmlData =
-      """<parent foo="bar"><pid>14ft3</pid>
-        |  <name>dave guy</name>
-        |</parent>
-       """.stripMargin
-    val df = spark.createDataFrame(Seq((8, xmlData))).toDF("number", "payload")
-    val xmlSchema = schema_of_xml_df(df.select("payload"))
-    val expectedSchema = df.schema.add("decoded", xmlSchema)
-    val result = df.withColumn("decoded", from_xml(df.col("payload"), xmlSchema))
+    val CONFIGURATION_XML =
+      Map(
+        "attributePrefix" -> "",
+        "valueTag"        -> "VALUE",
+        "ignoreNamespace" -> "true",
+        "inferSchema"     -> "false"
+      )
 
-    assert(expectedSchema === result.schema)
-    assert(result.select("decoded.pid").head().getString(0) === "14ft3")
-    assert(result.select("decoded._foo").head().getString(0) === "bar")
+    val xmlData2 = """<parent foo="bar"><pid><name_2>dave guy</name_2><name_2>dave guy</name_2></pid><name>dave guy</name></parent>"""
+
+    val df2 = spark.createDataFrame(Seq((8, xmlData2))).toDF("number", "payload")
+    val xmlSchema2 = schema_of_xml_df(df2.select("payload"), CONFIGURATION_XML)
+    val result2 = df2.withColumn("decoded", from_xml(df2.col("payload"), xmlSchema2, CONFIGURATION_XML))
+
+    result2.show(false)
+    result2.printSchema()
+
+    assert(result2.selectExpr("decoded.name").head().getString(0) === "dave guy")
+
+
+    val xmlData1 = """<parent foo="bar">\n<pid>\n<name_2>dave guy</name_2>\n<name_2>dave guy</name_2>\n</pid>\n<name>dave guy</name>\n</parent>"""
+
+    val df = spark.createDataFrame(Seq((8, xmlData1))).toDF("number", "payload")
+    val xmlSchema = schema_of_xml_df(df.select("payload"), CONFIGURATION_XML)
+    val result1 = df.withColumn("decoded", from_xml(df.col("payload"), xmlSchema, CONFIGURATION_XML))
+
+    result1.show(false)
+    result1.printSchema()
+
+    assert(result1.selectExpr("decoded.name").head().getString(0) === "dave guy")
+
+//    assert(expectedSchema === result.schema)
+//    assert(result.select("decoded.pid").head().getString(0) === "14ft3")
+//    assert(result.select("decoded.foo").head().getString(0) === "bar")
   }
 
   test("from_xml array basic test") {

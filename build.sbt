@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core.MissingClassProblem
 
-name := "spark-xml"
+name := "spark-xml-ds"
 
 version := "0.18.1"
 

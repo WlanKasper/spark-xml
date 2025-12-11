@@ -54,7 +54,7 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    spark.sparkContext.setLogLevel("WARN")  // Initialize Spark session
+    spark.sparkContext.setLogLevel("WARN") // Initialize Spark session
     tempDir = Files.createTempDirectory("XmlSuite")
     tempDir.toFile.deleteOnExit()
   }
@@ -176,7 +176,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DDL test") {
-    spark.sql(s"""
+    spark.sql(
+      s"""
          |CREATE TEMPORARY VIEW carsTable1
          |USING com.databricks.spark.xml
          |OPTIONS (path "${resDir + "cars.xml"}")
@@ -186,7 +187,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DDL test with alias name") {
-    spark.sql(s"""
+    spark.sql(
+      s"""
          |CREATE TEMPORARY VIEW carsTable2
          |USING xml
          |OPTIONS (path "${resDir + "cars.xml"}")
@@ -232,8 +234,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DSL test for permissive mode for corrupt records") {
     val carsDf = new XmlReader(Map(
-        "mode" -> PermissiveMode.name,
-        "columnNameOfCorruptRecord" -> "_malformed_records"))
+      "mode" -> PermissiveMode.name,
+      "columnNameOfCorruptRecord" -> "_malformed_records"))
       .xmlFile(spark, resDir + "cars-malformed.xml")
     val cars = carsDf.collect()
     assert(cars.length === 3)
@@ -276,11 +278,12 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
   }
 
   test("DDL test with empty file") {
-    spark.sql(s"""
-           |CREATE TEMPORARY VIEW carsTable3
-           |(year double, make string, model string, comments string, grp string)
-           |USING com.databricks.spark.xml
-           |OPTIONS (path "${resDir + "empty.xml"}")
+    spark.sql(
+      s"""
+         |CREATE TEMPORARY VIEW carsTable3
+         |(year double, make string, model string, comments string, grp string)
+         |USING com.databricks.spark.xml
+         |OPTIONS (path "${resDir + "empty.xml"}")
       """.stripMargin.replaceAll("\n", " "))
 
     assert(spark.sql("SELECT count(*) FROM carsTable3").collect().head(0) === 0)
@@ -288,12 +291,14 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("SQL test insert overwrite") {
     val tempPath = getEmptyTempDir()
-    spark.sql(s"""
+    spark.sql(
+      s"""
          |CREATE TEMPORARY VIEW booksTableIO
          |USING com.databricks.spark.xml
          |OPTIONS (path "${resDir + "books.xml"}", rowTag "book")
       """.stripMargin.replaceAll("\n", " "))
-    spark.sql(s"""
+    spark.sql(
+      s"""
          |CREATE TEMPORARY VIEW booksTableEmpty
          |(author string, description string, genre string,
          |id string, price double, publish_date string, title string)
@@ -466,10 +471,10 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
     // Create the schema.
     val dataTypes = Array(
-        StringType, NullType, BooleanType,
-        ByteType, ShortType, IntegerType, LongType,
-        FloatType, DoubleType, DecimalType(25, 3), DecimalType(6, 5),
-        DateType, TimestampType, MapType(StringType, StringType))
+      StringType, NullType, BooleanType,
+      ByteType, ShortType, IntegerType, LongType,
+      FloatType, DoubleType, DecimalType(25, 3), DecimalType(6, 5),
+      DateType, TimestampType, MapType(StringType, StringType))
     val fields = dataTypes.zipWithIndex.map { case (dataType, index) =>
       field(s"col$index", dataType)
     }
@@ -616,8 +621,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
     val attributePrefix = "@#"
     val valueTag = "#@@value"
     val resultsTwo = new XmlReader(Map(
-        "rowTag" -> "book", "attributePrefix" -> attributePrefix,
-        "valueTag" -> valueTag))
+      "rowTag" -> "book", "attributePrefix" -> attributePrefix,
+      "valueTag" -> valueTag))
       .xmlFile(spark, resDir + "books-attributes-in-no-child.xml")
 
     val schemaTwo = buildSchema(
@@ -731,7 +736,7 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
       array("xs_any", StringType))
     val results = spark.read.schema(schema).option("rowTag", "book").xml(resDir + "books.xml")
       .collect()
-    results.foreach { r => 
+    results.foreach { r =>
       assert(r.getAs[Seq[String]]("xs_any").size === 3)
     }
   }
@@ -858,7 +863,7 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(messageOne === "requirement failed: 'rowTag' should not include angle brackets")
 
     val messageTwo = intercept[IllegalArgumentException] {
-            spark.read.option("rowTag", "<ROW").xml(resDir + "cars.xml")
+      spark.read.option("rowTag", "<ROW").xml(resDir + "cars.xml")
     }.getMessage
     assert(
       messageTwo === "requirement failed: 'rowTag' should not include angle brackets")
@@ -926,8 +931,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
 
   test("DSL test with malformed attributes") {
     val results = new XmlReader(Map("mode" -> DropMalformedMode.name, "rowTag" -> "book"))
-        .xmlFile(spark, resDir + "books-malformed-attributes.xml")
-        .collect()
+      .xmlFile(spark, resDir + "books-malformed-attributes.xml")
+      .collect()
 
     assert(results.length === 2)
     assert(results(0)(0) === "bk111")
@@ -957,8 +962,8 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
     val rowsCount = 1
 
     Seq("attributesStartWithNewLine.xml",
-        "attributesStartWithNewLineCR.xml",
-        "attributesStartWithNewLineLF.xml").foreach { file =>
+      "attributesStartWithNewLineCR.xml",
+      "attributesStartWithNewLineLF.xml").foreach { file =>
       val df = spark.read
         .option("ignoreNamespace", "true")
         .option("excludeAttribute", "false")
@@ -1133,37 +1138,36 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
     val CONFIGURATION_XML =
       Map(
         "attributePrefix" -> "",
-        "valueTag"        -> "VALUE",
-        "ignoreNamespace" -> "true",
-        "inferSchema"     -> "false"
+        "valueTag" -> "VALUE",
+        "inferSchema" -> "false"
       )
 
-    val xmlData2 = """<parent foo="bar"><pid><name_2>dave guy</name_2><name_2>dave guy</name_2></pid><name>dave guy</name></parent>"""
+    val schema = StructType(
+      Seq(
+        StructField("foo", StringType, nullable = false), // attribute of parent
+        StructField("pid", StructType(
+          Seq(
+            StructField("name_2", ArrayType(
+                StringType, containsNull = true
+              ), nullable = true
+            )
+          )
+        ), nullable = true),
+        StructField("name", StringType, nullable = true)
+      )
+    )
+    val xmlData =
+      """<parent foo="bar">\n<pid>\n<name_2>dave guy</name_2>
+        |<name_2>dave guy</name_2>\n</pid>\n<name>dave guy</name>\n</parent>""".stripMargin
 
-    val df2 = spark.createDataFrame(Seq((8, xmlData2))).toDF("number", "payload")
-    val xmlSchema2 = schema_of_xml_df(df2.select("payload"), CONFIGURATION_XML)
-    val result2 = df2.withColumn("decoded", from_xml(df2.col("payload"), xmlSchema2, CONFIGURATION_XML))
+    val df = spark.createDataFrame(Seq((8, xmlData))).toDF("number", "payload")
+    val result = df.withColumn("decoded", from_xml(df.col("payload"), schema, CONFIGURATION_XML))
 
-    result2.show(false)
-    result2.printSchema()
+    result.show(false)
+    result.printSchema()
 
-    assert(result2.selectExpr("decoded.name").head().getString(0) === "dave guy")
-
-
-    val xmlData1 = """<parent foo="bar">\n<pid>\n<name_2>dave guy</name_2>\n<name_2>dave guy</name_2>\n</pid>\n<name>dave guy</name>\n</parent>"""
-
-    val df = spark.createDataFrame(Seq((8, xmlData1))).toDF("number", "payload")
-    val xmlSchema = schema_of_xml_df(df.select("payload"), CONFIGURATION_XML)
-    val result1 = df.withColumn("decoded", from_xml(df.col("payload"), xmlSchema, CONFIGURATION_XML))
-
-    result1.show(false)
-    result1.printSchema()
-
-    assert(result1.selectExpr("decoded.name").head().getString(0) === "dave guy")
-
-//    assert(expectedSchema === result.schema)
-//    assert(result.select("decoded.pid").head().getString(0) === "14ft3")
-//    assert(result.select("decoded.foo").head().getString(0) === "bar")
+    assert(result.selectExpr("decoded.foo").head().getString(0) === "bar")
+    assert(result.selectExpr("decoded.name").head().getString(0) === "dave guy")
   }
 
   test("from_xml array basic test") {
@@ -1179,7 +1183,7 @@ final class XmlSuite extends AnyFunSuite with BeforeAndAfterAll {
     assert(expectedSchema === result.schema)
     assert(result.selectExpr("decoded[0].pid").head().getString(0) === "14ft3")
     assert(result.selectExpr("decoded[1].pid").head().getString(0) === "12345")
-  }
+ }
 
   test("from_xml error test") {
     // XML contains error
